@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';
 
 import {Icon, Input} from '@/components'
@@ -14,16 +14,31 @@ const validationSchema = yup.object().shape({
 })
 
 export const Signup = () => {
+    const navigate = useNavigate();
     const [auth, setAuth] = useLocalStorage('auth', {})
+
     const formik = useFormik({
         onSubmit: async (values) => {
-            const res = await axios({
+            const existsEmail = await axios({
                 method: 'post',
                 baseURL: import.meta.env.VITE_API_URL,
-                url: '/users',
-                data: values
+                url: '/findEmail',
+                data: {
+                    email: values.email
+                }      
             })
-            console.log(res.data);
+
+
+            if(JSON.stringify(existsEmail.data) === '{}'){
+                const res = await axios({
+                    method: 'post',
+                    baseURL: import.meta.env.VITE_API_URL,
+                    url: '/users',
+                    data: values
+                })
+                setAuth({})
+                navigate("/login")
+            }
         },
         initialValues: {
             name: '',
